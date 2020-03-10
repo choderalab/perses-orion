@@ -1,0 +1,8 @@
+-e .
+# Development requirements for cubes. Production requirements go in setup.py
+OpenEye-floe-pkg-tools>=0.8.1,<0.9.0
+OpenEye-Artemis>=1.1.1,<2.0.0
+
+invoke
+sphinx_rtd_theme
+

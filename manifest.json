@@ -1,0 +1,50 @@
+{
+  "build_requirements": {
+      "gpu": 1,
+      "instance_tags": [
+          "cuda9"
+      ]
+  },
+  "conda_channels": [
+      "conda-forge",
+      "mobleylab",
+      "omnia/label/cuda90",
+      "omnia",
+      "OpenEye/label/Orion",
+      "Solvationtools",
+      "nividic"
+  ],
+  "conda_dependencies": [
+      "ambermini==16.16.0",
+      "alchemy==1.2.3",
+      "cerberus==1.1",
+      "hdbscan==0.8.12",
+      "gromacs_p2",
+      "matplotlib==3.0.3",
+      "networkx==1.11",
+      "numpy==1.14.2",
+      "oeommtools==0.1.10",
+      "openforcefield==0.5.1",
+      "openforcefields==1.0.0",
+      "openmm==7.4.0",
+      "openmmtools==0.18.3",
+      "openmoltools==0.8.1",
+      "packmol==18.169",
+      "parmed==3.2.0",
+      "pdbfixer==1.5",
+      "pip==18.0",
+      "pymbar==3.0.3",
+      "pyyaml==3.13",
+      "pyparsing==2.3.0",
+      "python==3.6.6",
+      "seaborn==0.8.1",
+      "smirnoff99frosst=1.0.5",
+      "sstmap==1.1.2",
+      "yank==0.24.1"
+  ],
+  "name": "perses-orion",
+  "python_version": "3.7.3",
+  "requirements": "orion-requirements.txt",
+  "version": "0.1.0",
+  "uuid": "d84e8443-b92d-4082-a833-c8e27733a9d7",
+}
