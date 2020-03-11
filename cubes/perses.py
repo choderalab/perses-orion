@@ -21,6 +21,8 @@ from snowball.utils.query_utils import get_receptor, get_init_mol
 from datarecord import OERecord, Types, OEPrimaryMolField, OEField
 from orionplatform.parameters import FieldParameter
 
+import yaml
+
 from simtk import unit
 import perses
 
@@ -101,13 +103,13 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         default=1.0,
         help_text="Pressure (atm)")
 
-    iterations = parameter.IntegerParameter(
-        'iterations',
+    n_iterations = parameter.IntegerParameter(
+        'n_iterations',
         default=5000,
-        help_text="Total number of Perses iterations for the entire floe.")
+        help_text="Total number of iterations.")
 
-    nsteps_per_iteration = parameter.IntegerParameter(
-        'nsteps_per_iteration',
+    n_steps_per_iteration = parameter.IntegerParameter(
+        'n_steps_per_iteration',
         default=250,
         help_text="Number of MD steps per iteration")
 
@@ -137,15 +139,15 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         choices=['PME', 'CutoffPeriodic'],
         help_text='Nonbonded method to use')
 
-    nstates = parameter.IntParameter(
-        'nstates',
-        default=12,
+    n_states = parameter.IntParameter(
+        'n_states',
+        default=11,
         help_text='Number of alchemical intermediate states')
 
     # Ports
     protein_port = RecordInputPort("protein_port", initializer=True)
     reference_ligand_port = RecordInputPort("reference_ligand_port", initializer=True)
-    ligand_port = RecordInputPort("ligand_port")
+    target_ligands_port = RecordInputPort("target_ligands_port")
 
     # Fields
     log_field = OEField("log_field", Types.String)
@@ -159,12 +161,46 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         # Retrieve reference ligand
         self._reference_ligand = self.reference_ligand_port.get_value(OEPrimaryMolField())
 
+        # Create YAML file
+        setup_options = dict()
+        setup_options['phases'] = ['ligand', 'complex']
+        setup_options['protein_pdb'] = 'receptor.pdb'
+        setup_options['ligand_file'] = 'ligands.sdf'
+        setup_options['old_ligand_index'] = 0
+        setup_options['new_ligand_index'] = 1
+        setup_options['forcefield_files'] = [self.args.protein_forcefield, self.args.solvent_forcefield]
+        setup_options['temperature'] = self.args.temperature
+        setup_options['pressure'] = self.args.pressure
+        setup_options['small_molecule_forcefield'] = self.args.small_molecule_forcefield
+        setup_options['atom_expression'] = 'IntType'
+        setup_options['n_steps_per_move_application'] = self.args.n_steps_per_iteration
+        setup_options['fe_type'] = 'repex'
+        setup_options['checkpoint_interval'] = self.args.checkpoint_interval
+        setup_options['n_cycles'] = self.n_iterations
+        setup_options['n_states'] = self.n_states
+        setup_options['n_equilibration_iterations'] = 0
+        setup_options['trajectory_directory'] = 'log0to5'
+        setup_options['trajectory_prefix'] = 'out'
+        setup_options['atom_selection'] = 'not water'
+        setup_options['timestep'] = self.args.timestep
+
+        self.log.info('Writing YAML file...')
+        self.yaml_filename = 'perses.yaml'
+        with open(self.yaml_filename, 'w'):
+            yaml.save(setup_options, yaml_file)
+            self.log.info(yaml.dump(setup_options))
+
     def process(self, record, port):
         # Make sure we have a molecule defined
         if not record.has_value(OEPrimaryMolField()):
             record.set_value(self.args.log_field, 'Record is missing an input molecule field')
             self.failure.emit(record)
         mol = record.get_value(OEPrimaryMolField())
+
+        # Report which compound we are processing
+        from openeye.oechem import OEMolToSmiles
+        smiles = OEMolToSmiles(mol);
+        self.log.info(f"Processing compound {smiles}")
 
         # Generate arbitrary 3D coordinates for target ligand
         from openeye import oeomega
@@ -177,40 +213,39 @@ class PersesCube(RecordPortsMixin, ComputeCube):
             oechem.OEWriteMolecule(ofs, mol)
 
         # Prepare input for perses
-        # TODO: Use tempfile
+        # TODO: Use tempdir in future for filesystem reasons
+        self.log.info(f"Writing receptor...")
         from openeye import oechem
         protein_pdb_filename = 'receptor.pdb'
         with oechem.oemolostream(protein_pdb_filename) as ofs
             oechem.OEWriteMolecule(ofs, self._receptor)
+        self.log.info(f"Writing ligands...")
         ligands_mol2_filename = 'ligands.mol2'
         with oechem.oemolostream(ligand_mol2_filename) as ofs
             oechem.OEWriteMolecule(ofs, self._reference_ligand) # molecule 0
             oechem.OEWriteMolecule(ofs, mol) # molecule 1
 
         # Set up perses calculation
-        atom_map = None # generate atom map automatically
-        old_ligand_index = 0 # first molecule in SDF
-        new_ligand_index = 1 # second molecule in SDF
-        forcefield_files = [self.args.protein_forcefield, self.args.solvent_forcefield]
-        trajectory_directory = 'lig0to1' # required for perses.analyze.load_simulations
-        trajectory_prefix = 'out' # required for perses.analyze.load_simulations
-        phases = ['solvent', 'complex']
-        from perses.app.relative_setup import RelativeFEPSetup
-        fe_setup = RelativeFEPSetup(ligands_mol2_filename, old_ligand_index, new_ligand_index, forcefield_files,
-                        phases=phases,
-                        protein_pdb_filename=protein_pdb_filename,
-                        temperature=self.args.temperature * unit.kelvin, pressure=self.args.pressure * unit.atmospheres,
-                        small_molecule_forcefield=self.args.small_molecule_forcefield,
-                        trajectory_directory=trajectory_directory,
-                        trajectory_prefix=trajectory_prefix,
-                        nonbonded_method=self.args.nonbonded_method)
+        from perses.app.setup_relative_calculation import getSetupOptions, run_setup, run
+        self.log.info(f"Loading setup options...")
+        setup_options = getSetupOptions(self.yaml_filename)
+        self.log.info(setup_options)
+
+        self.log.info(f"Setting up perses calculation...")
+        perses_setup = run_setup(setup_options)
+
+        self.log.info(f"Running calculations...")
+        run(self.yaml_filename)
 
         # Analyze the data
+        self.log.info(f"Analyzing calculations...")
         from perses.analyze.load_simulations import Simulation
         simulation = Simulation(0, 1)
         simulation.load_data()
 
         # Set output molecule information
+        # TODO: Store trajectory or final snapshots
+        self.log.info(f"DDG = {simulation.comdg} +- {simulation.comddg} kcal/mol...")
         record.set_value(self.DDG_field, simulation.comdg)
         record.set_field(self.dDDG_field, simulation.comddg)
         self.success.emit(record)

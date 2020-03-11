@@ -41,7 +41,7 @@ setup(
     name="perses-orion",
     version=version,
     packages=find_packages(exclude=["tests/*", "floes/*"]),
-    author="John Chodera",
+    author="John D. Chodera",
     author_email="john.chodera@choderalab.org",
     description="Relative alchemical free energy calculations with perses on Orion",
     license="Other/Proprietary License",

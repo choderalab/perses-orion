@@ -1,0 +1,28 @@
+name: orion
+channels:
+- conda-forge
+- mobleylab
+- omnia/label/cuda90
+- omnia
+- OpenEye/label/Orion
+- SolvationTools
+- nividic
+dependencies:
+# general
+- pip
+- cookiecutter
+# perses
+- perses
+# orion
+- pip:
+  - OpenEye-orionplatform==2.2.0
+  - attrs==18.2.0
+  - invoke==1.2.0
+  - OpenEye-artemis==1.1.1
+  - OpenEye-ensemble2img==0.1.1
+  - OpenEye-floereport==0.1.5
+  - OpenEye_oetrajanalysis==0.1.4.4
+  - Openeye-toolkits==2019.10.2
+  - pytest==3.10.1
+  - six==1.12.0
+  - wcwidth==0.1.7

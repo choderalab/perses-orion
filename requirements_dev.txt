@@ -1,8 +1,17 @@
--e .
-# Development requirements for cubes. Production requirements go in setup.py
-OpenEye-floe-pkg-tools>=0.8.1,<0.9.0
-OpenEye-Artemis>=1.1.1,<2.0.0
+# PIP
+attrs==18.2.0
+invoke==1.2.0
+pip==18.0
+pytest==3.10.1
+six==1.12.0
+wcwidth==0.1.7
 
-invoke
-sphinx_rtd_theme
+# OE Stack
+# Leave this here to avoid pip install issues
+OpenEye-orionplatform==2.2.0
 
+# OpenEye-Artemis==1.1.1
+OpenEye-ensemble2img==0.1.1
+OpenEye-floereport==0.1.5
+OpenEye_oetrajanalysis==0.1.4.4
+Openeye-toolkits==2019.10.2
