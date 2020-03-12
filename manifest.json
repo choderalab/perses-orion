@@ -20,7 +20,7 @@
   ],
   "name": "perses-orion",
   "python_version": "3.6",
-  "requirements": "requirements.txt",
+  "requirements": "orion-requirements.txt",
   "uuid": "d84e8443-b92d-4082-a833-c8e27733a9d7",
   "version": "0.1.0"
 }

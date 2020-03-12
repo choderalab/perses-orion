@@ -37,7 +37,7 @@ FILE_DIR = os.path.join(PACKAGE_DIR, "tests", "test_data", "star-benchmark")
 FLOES_DIR = os.path.join(PACKAGE_DIR, "floes")
 
 
-test_package = OrionTestPackage(manifest=dict(requirements="requirements.txt"))
+test_package = OrionTestPackage(manifest=dict(requirements="requirements_dev.txt"))
 # Add the contents of the regular package
 test_package.add_directory(PACKAGE_DIR)
 # Remove the tests as have different requirements

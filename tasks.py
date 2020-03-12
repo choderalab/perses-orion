@@ -233,6 +233,41 @@ def _clean_orion_package_files(reqs_filename="orion-requirements.txt"):
     if os.path.isfile(reqs_path):
         os.remove(reqs_path)
 
+import cubes, copy
+PACKAGE_DIR = os.path.dirname(os.path.dirname(cubes.__file__))
+print(PACKAGE_DIR)
+FLOES_DIR = os.path.join(PACKAGE_DIR, "floes")
+
+@task
+def release(ctx):
+    """
+    Create a package for the distribution. All the floes where
+    the release variable is set to True are included in the package
+    """
+
+    # clean(ctx)
+
+    # Un-wanted Package list
+    pkg_un = ['OpenEye-Artemis', 'OpenEye-floe-pkg-tools']
+
+    with open(os.path.join(PACKAGE_DIR, "requirements_dev.txt"), "r") as f:
+        requirements_lines = f.readlines()
+
+    original_requirements = copy.deepcopy(requirements_lines)
+
+    for idx in range(0, len(requirements_lines)):
+        for pkg in pkg_un:
+            if pkg in requirements_lines[idx]:
+                requirements_lines[idx] = "# " + requirements_lines[idx]
+
+    with open("requirements_dev.txt", "w") as f:
+        f.writelines(requirements_lines)
+
+    run("python setup.py sdist")
+
+    with open("requirements_dev.txt", "w") as f:
+        f.writelines(original_requirements)
+
 
 def convert_manifest_to_conda_environment(manifest_path, output_path):
     with open(manifest_path, "r") as ifs:
