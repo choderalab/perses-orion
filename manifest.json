@@ -17,11 +17,14 @@
   ],
   "conda_dependencies": [
     "pip",
-    "perses==0.5.0"
+    "perses==0.5.1",
+    "openmmtools>=0.19.0",
+    "openforcefield>=0.6.0",
+    "openforcefields>=1.1.0"
   ],
   "name": "perses-orion",
   "python_version": "3.6",
   "requirements": "orion-requirements.txt",
   "uuid": "903190e6-c35b-42cb-b793-1639ac8ad4c8",
-  "version": "0.1.6"
+  "version": "0.1.9"
 }
