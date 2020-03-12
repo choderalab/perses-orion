@@ -107,7 +107,7 @@ class PersesCube(RecordPortsMixin, ComputeCube):
     n_iterations = IntegerParameter(
         'n_iterations',
         default=5000,
-        help_text="Total number of iterations.")
+        help_text="Total number of iterations")
 
     n_steps_per_iteration = IntegerParameter(
         'n_steps_per_iteration',
@@ -150,6 +150,11 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         default=11,
         help_text='Number of alchemical intermediate states')
 
+    vacuum_test = BooleanParameter(
+        'vacuum_test',
+        default=False,
+        help_text='If True, just run a quick test in vacuum')
+
     # Ports
     protein_port = RecordInputPort("protein_port", initializer=True)
     reference_ligand_port = RecordInputPort("reference_ligand_port", initializer=True)
@@ -178,7 +183,10 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         # Create YAML file
         self.log.info('Creating YAML file...')
         setup_options = dict()
-        setup_options['phases'] = ['solvent', 'complex']
+        if self.args.vacuum_test:
+            setup_options['phases'] = ['vacuum']
+        else:
+            setup_options['phases'] = ['solvent', 'complex']
         setup_options['protein_pdb'] = 'receptor.pdb'
         setup_options['ligand_file'] = 'ligands.sdf'
         setup_options['old_ligand_index'] = 0
@@ -202,7 +210,8 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         setup_options['save_setup_pickle_as'] = 'out.pkl'
 
         self.log.info('Writing YAML file...')
-        self.yaml_filename = 'perses.yaml'
+        import os
+        self.yaml_filename = os.path.abspath('perses.yaml')
         with open(self.yaml_filename, 'w') as output:
             yaml.dump(setup_options, output)
             self.log.info(yaml.dump(setup_options))
@@ -227,13 +236,7 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         if ret_code != oeomega.OEOmegaReturnCode_Success:
             record.set_value(self.args.log_field, oeomega.OEGetOmegaError(ret_code))
             self.failure.emit(record)
-            oechem.OEWriteMolecule(ofs, mol)
 
-        # Set up perses calculation
-        from perses.app.setup_relative_calculation import getSetupOptions, run_setup, run
-        self.log.info(f"Loading setup options...")
-        setup_options = getSetupOptions(self.yaml_filename)
-        self.log.info(str(setup_options))
 
         from tempfile import TemporaryDirectory
         import os
@@ -242,37 +245,50 @@ class PersesCube(RecordPortsMixin, ComputeCube):
             self.log.info(f"Entering temporary directory {tmpdir}")
             os.chdir(tmpdir)
 
+            # Set up perses calculation
+            from perses.app.setup_relative_calculation import getSetupOptions, run_setup, run
+            self.log.info(f"Loading setup options...")
+            setup_options = getSetupOptions(self.yaml_filename)
+            self.log.info(str(setup_options))
+
             # Prepare input for perses
             # TODO: Use tempdir in future for filesystem reasons
-            self.log.info(f"Writing receptor...")
+            self.log.info(f"Writing receptor...", flush=True)
             from openeye import oechem
             protein_pdb_filename = 'receptor.pdb'
             with oechem.oemolostream(protein_pdb_filename) as ofs:
                 oechem.OEWriteMolecule(ofs, self._receptor)
-            self.log.info(f"Writing ligands...")
+            self.log.info(f"Writing ligands...", flush=True)
             ligands_sdf_filename = 'ligands.sdf'
             with oechem.oemolostream(ligands_sdf_filename) as ofs:
                 oechem.OEWriteMolecule(ofs, self._reference_ligand) # molecule 0
                 oechem.OEWriteMolecule(ofs, mol) # molecule 1
 
-            self.log.info(f"Setting up perses calculation...")
+            self.log.info(f"Setting up perses calculation...", flush=True)
             perses_setup = run_setup(setup_options)
 
-            self.log.info(f"Running calculations...")
+            self.log.info(f"Running calculations...", flush=True)
             run(self.yaml_filename)
 
             # Analyze the data
-            self.log.info(f"Analyzing calculations...")
-            from perses.analyze.load_simulations import Simulation
+            self.log.info(f"Analyzing calculations...", flush=True)
+            from perses.analysis.load_simulations import Simulation
             simulation = Simulation(0, 1)
             simulation.load_data()
+
             os.chdir(cwd)
 
         # Set output molecule information
         # TODO: Store trajectory or final snapshots
-        self.log.info(f"DDG = {simulation.bindingdb} +- {simulation.bindingddg} kcal/mol...")
-        record.set_value(self.DDG_field, simulation.bindingdg)
-        record.set_field(self.dDDG_field, simulation.bindingddg)
+        phases = setup_options['phases']
+        if ('complex' in phases) and ('solvent' in phases):
+            self.log.info(f"DDG = {simulation.bindingdb} +- {simulation.bindingddg} kcal/mol...")
+            record.set_value(self.DDG_field, simulation.bindingdg)
+            record.set_field(self.dDDG_field, simulation.bindingddg)
+        elif 'vacuum' in setup_options['p']:
+            self.log.info(f"DDG(vacuum) = {simulation.vacdb} +- {simulation.vacddg} kcal/mol...")
+            record.set_value(self.DDG_field, simulation.vacdg)
+            record.set_field(self.dDDG_field, simulation.vacddg)
         self.success.emit(record)
 
     # Uncomment this and implement to cleanup the cube at the end of the run

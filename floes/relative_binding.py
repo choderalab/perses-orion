@@ -57,6 +57,18 @@ output_cube.promote_parameter(
     "data_out", promoted_name="out", title="Predicted relative binding free energies"
 )
 
+perses_cube.promote_parameter(
+    "n_iterations", promoted_name="n_iterations", title="Total number of iterations"
+)
+
+perses_cube.promote_parameter(
+    "n_steps_per_iteration", promoted_name="n_steps_per_iteration", title="Number of MD steps per iteration"
+)
+
+perses_cube.promote_parameter(
+    "vacuum_test", promoted_name="vacuum_test", title="If True, just run a quick test in vacuum"
+)
+
 protein_input_cube.success.connect(perses_cube.protein_port)
 reference_ligand_input_cube.success.connect(perses_cube.reference_ligand_port)
 target_ligands_input_cube.success.connect(perses_cube.target_ligands_port)

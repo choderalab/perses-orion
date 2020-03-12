@@ -76,6 +76,7 @@ class TestPersesFloe(FloeTestCase):
                     "n_steps_per_iteration" : 2,
                     "solvent_padding" : 0.0,
                     "protein": protein_file.identifier,
+                    "vacuum_test": True, # test ligand in vacuum only
                     "reference_ligand": reference_ligand_file.identifier,
                     "target_ligands": target_ligands_file.identifier,
                     "out": output_file.identifier,
