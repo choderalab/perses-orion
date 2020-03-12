@@ -1,26 +1,26 @@
 {
   "build_requirements": {
-      "gpu": 1,
-      "instance_tags": [
-          "cuda9"
-      ]
+    "gpu": 1,
+    "instance_tags": [
+      "cuda9"
+    ]
   },
   "conda_channels": [
-      "conda-forge",
-      "mobleylab",
-      "omnia-dev/label/cuda90", # openmm 7.5.0 required for SMIRNOFF support
-      "omnia",
-      "OpenEye/label/Orion",
-      "Solvationtools",
-      "nividic"
+    "conda-forge",
+    "mobleylab",
+    "omnia-dev/label/cuda90",
+    "omnia",
+    "OpenEye/label/Orion",
+    "Solvationtools",
+    "nividic"
   ],
   "conda_dependencies": [
     "pip",
-    "perses==0.5.1",
+    "perses==0.5.1"
   ],
   "name": "perses-orion",
   "python_version": "3.6",
   "requirements": "requirements.txt",
-  "version": "0.1.0",
   "uuid": "d84e8443-b92d-4082-a833-c8e27733a9d7",
+  "version": "0.1.0"
 }
