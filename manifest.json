@@ -23,5 +23,5 @@
   "python_version": "3.7",
   "requirements": "orion-requirements.txt",
   "uuid": "903190e6-c35b-42cb-b793-1639ac8ad4c8",
-  "version": "0.1.2"
+  "version": "0.1.3"
 }

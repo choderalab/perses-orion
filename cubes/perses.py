@@ -270,9 +270,9 @@ class PersesCube(RecordPortsMixin, ComputeCube):
 
         # Set output molecule information
         # TODO: Store trajectory or final snapshots
-        self.log.info(f"DDG = {simulation.comdg} +- {simulation.comddg} kcal/mol...")
-        record.set_value(self.DDG_field, simulation.comdg)
-        record.set_field(self.dDDG_field, simulation.comddg)
+        self.log.info(f"DDG = {simulation.bindingdb} +- {simulation.bindingddg} kcal/mol...")
+        record.set_value(self.DDG_field, simulation.bindingdg)
+        record.set_field(self.dDDG_field, simulation.bindingddg)
         self.success.emit(record)
 
     # Uncomment this and implement to cleanup the cube at the end of the run
