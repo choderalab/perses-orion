@@ -15,11 +15,12 @@
 # liable for any damages or liability in connection with the Sample Code
 # or its use.
 
-from floe.api import BooleanParameter, ComputeCube
+from floe.api.cubes import ComputeCube, ParallelMixin
+from floe.api.parameter import IntegerParameter, StringParameter, DecimalParameter, BooleanParameter
 from orionplatform.mixins import RecordPortsMixin
-from snowball.utils.query_utils import get_receptor, get_init_mol
 from datarecord import OERecord, Types, OEPrimaryMolField, OEField
 from orionplatform.parameters import FieldParameter
+from orionplatform.ports import RecordInputPort
 
 import yaml
 
@@ -54,8 +55,8 @@ class PersesCube(RecordPortsMixin, ComputeCube):
     }
 
     AVAILABLE_PROTEIN_FORCEFIELDS = [
-        'protein.amber14SB.xml',
-        'ff99SBildn.xml',
+        'amber/protein.ff14SB.xml',
+        'amber/ff99SBildn.xml',
         ]
 
     AVAILABLE_LIGAND_FORCEFIELDS = [
@@ -66,80 +67,85 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         ]
 
     AVAILABLE_SOLVENT_FORCEFIELDS = [
-        'tip3p_standard.xml',
-        'tip3pfb_standard.xml',
+        'amber/tip3p_standard.xml',
+        'amber/tip3pfb_standard.xml',
         ]
 
-    protein_forcefield = parameter.StringParameter(
+    protein_forcefield = StringParameter(
         'protein_forcefield',
         default=AVAILABLE_PROTEIN_FORCEFIELDS[0],
         choices=AVAILABLE_PROTEIN_FORCEFIELDS,
         help_text='Force field parameters to be applied to the protein')
 
-    solvent_forcefield = parameter.StringParameter(
+    solvent_forcefield = StringParameter(
         'solvent_forcefield',
         default=AVAILABLE_SOLVENT_FORCEFIELDS[0],
         choices=AVAILABLE_SOLVENT_FORCEFIELDS,
         help_text='Force field parameters to be applied to water and ions')
 
-    ligand_forcefield = parameter.StringParameter(
+    ligand_forcefield = StringParameter(
         'ligand_forcefield',
         default=AVAILABLE_LIGAND_FORCEFIELDS[0],
         choices=AVAILABLE_LIGAND_FORCEFIELDS,
         help_text='Force field to be applied to the ligand')
 
-    temperature = parameter.StringParameter(
+    temperature = StringParameter(
         'temperature',
         default=300.0,
         help_text="Temperature (Kelvin)")
 
-    temperature = parameter.DecimalParameter(
+    temperature = DecimalParameter(
         'temperature',
         default=300.0,
         help_text="Temperature (Kelvin)")
 
-    pressure = parameter.DecimalParameter(
+    pressure = DecimalParameter(
         'pressure',
         default=1.0,
         help_text="Pressure (atm)")
 
-    n_iterations = parameter.IntegerParameter(
+    n_iterations = IntegerParameter(
         'n_iterations',
         default=5000,
         help_text="Total number of iterations.")
 
-    n_steps_per_iteration = parameter.IntegerParameter(
+    n_steps_per_iteration = IntegerParameter(
         'n_steps_per_iteration',
         default=250,
         help_text="Number of MD steps per iteration")
 
-    checkpoint_interval = parameter.IntegerParameter(
+    checkpoint_interval = IntegerParameter(
         'checkpoint_interval',
         default=500,
         help_text="Full checkpoint interval (iterations)")
 
-    timestep = parameter.DecimalParameter(
+    timestep = DecimalParameter(
         'timestep',
         default=4.0,
         help_text="Timestep (fs)")
 
-    hmr = parameter.BooleanParameter(
+    hmr = BooleanParameter(
         'hmr',
         default=True,
         description='On enables Hydrogen Mass Repartitioning (HMR)')
 
-    suffix = parameter.StringParameter(
+    suffix = StringParameter(
         'suffix',
         default='perses',
         help_text='Filename suffix for output simulation files')
 
-    nonbonded_method = parameter.StringParameter(
+    nonbonded_method = StringParameter(
         'nonbonded_method',
         default='PME',
         choices=['PME', 'CutoffPeriodic'],
         help_text='Nonbonded method to use')
 
-    n_states = parameter.IntParameter(
+    solvent_padding = DecimalParameter(
+        'solvent_padding',
+        default=9.0,
+        help_text="Solvent padding (A)")
+
+    n_states = IntegerParameter(
         'n_states',
         default=11,
         help_text='Number of alchemical intermediate states')
@@ -156,14 +162,23 @@ class PersesCube(RecordPortsMixin, ComputeCube):
 
     def begin(self):
         # Retrieve receptor
-        self._receptor = self.protein_port.get_value(OEPrimaryMolField())
+        mols = [record.get_value(OEPrimaryMolField()) for record in self.protein_port]
+        if len(mols) != 1:
+            raise Exception(f'{len(mols)} molecules found on protein_port')
+        self._receptor = mols[0]
+        self.log.info(f'Receptor: {self._receptor.NumAtoms()}')
 
         # Retrieve reference ligand
-        self._reference_ligand = self.reference_ligand_port.get_value(OEPrimaryMolField())
+        mols = [record.get_value(OEPrimaryMolField()) for record in self.reference_ligand_port]
+        if len(mols) != 1:
+            raise Exception(f'{len(mols)} molecules found on reference_ligand_port')
+        self._reference_ligand = mols[0]
+        self.log.info(f'Reference ligand: {self._reference_ligand.NumAtoms()}')
 
         # Create YAML file
+        self.log.info('Creating YAML file...')
         setup_options = dict()
-        setup_options['phases'] = ['ligand', 'complex']
+        setup_options['phases'] = ['solvent', 'complex']
         setup_options['protein_pdb'] = 'receptor.pdb'
         setup_options['ligand_file'] = 'ligands.sdf'
         setup_options['old_ligand_index'] = 0
@@ -171,23 +186,25 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         setup_options['forcefield_files'] = [self.args.protein_forcefield, self.args.solvent_forcefield]
         setup_options['temperature'] = self.args.temperature
         setup_options['pressure'] = self.args.pressure
-        setup_options['small_molecule_forcefield'] = self.args.small_molecule_forcefield
-        setup_options['atom_expression'] = 'IntType'
+        setup_options['small_molecule_forcefield'] = self.args.ligand_forcefield
+        setup_options['atom_expression'] = ['IntType']
         setup_options['n_steps_per_move_application'] = self.args.n_steps_per_iteration
         setup_options['fe_type'] = 'repex'
         setup_options['checkpoint_interval'] = self.args.checkpoint_interval
-        setup_options['n_cycles'] = self.n_iterations
-        setup_options['n_states'] = self.n_states
+        setup_options['n_cycles'] = self.args.n_iterations
+        setup_options['n_states'] = self.args.n_states
         setup_options['n_equilibration_iterations'] = 0
-        setup_options['trajectory_directory'] = 'log0to5'
+        setup_options['trajectory_directory'] = 'lig0to1'
         setup_options['trajectory_prefix'] = 'out'
         setup_options['atom_selection'] = 'not water'
         setup_options['timestep'] = self.args.timestep
+        setup_options['solvent_padding'] = self.args.solvent_padding
+        setup_options['save_setup_pickle_as'] = 'out.pkl'
 
         self.log.info('Writing YAML file...')
         self.yaml_filename = 'perses.yaml'
-        with open(self.yaml_filename, 'w'):
-            yaml.save(setup_options, yaml_file)
+        with open(self.yaml_filename, 'w') as output:
+            yaml.dump(setup_options, output)
             self.log.info(yaml.dump(setup_options))
 
     def process(self, record, port):
@@ -217,11 +234,11 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         self.log.info(f"Writing receptor...")
         from openeye import oechem
         protein_pdb_filename = 'receptor.pdb'
-        with oechem.oemolostream(protein_pdb_filename) as ofs
+        with oechem.oemolostream(protein_pdb_filename) as ofs:
             oechem.OEWriteMolecule(ofs, self._receptor)
         self.log.info(f"Writing ligands...")
-        ligands_mol2_filename = 'ligands.mol2'
-        with oechem.oemolostream(ligand_mol2_filename) as ofs
+        ligands_sdf_filename = 'ligands.sdf'
+        with oechem.oemolostream(ligands_sdf_filename) as ofs:
             oechem.OEWriteMolecule(ofs, self._reference_ligand) # molecule 0
             oechem.OEWriteMolecule(ofs, mol) # molecule 1
 
@@ -229,7 +246,7 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         from perses.app.setup_relative_calculation import getSetupOptions, run_setup, run
         self.log.info(f"Loading setup options...")
         setup_options = getSetupOptions(self.yaml_filename)
-        self.log.info(setup_options)
+        self.log.info(str(setup_options))
 
         self.log.info(f"Setting up perses calculation...")
         perses_setup = run_setup(setup_options)

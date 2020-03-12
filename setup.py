@@ -23,7 +23,7 @@ from setuptools import setup, find_packages, convert_path
 
 # Requirements for cubes
 requirements = [
-    "OpenEye-orionplatform==2.3.0",
+    "OpenEye-orionplatform==2.2.0",
 ]
 
 if argv[-1] == "--requires":

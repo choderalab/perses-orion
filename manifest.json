@@ -16,11 +16,11 @@
   ],
   "conda_dependencies": [
     "pip",
-    "perses",
+    "perses==0.5.1",
   ],
   "name": "perses-orion",
   "python_version": "3.6",
-  "requirements": "requirements_dev.txt",
+  "requirements": "requirements.txt",
   "version": "0.1.0",
   "uuid": "d84e8443-b92d-4082-a833-c8e27733a9d7",
 }
