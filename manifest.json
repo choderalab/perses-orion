@@ -18,13 +18,25 @@
   "conda_dependencies": [
     "pip",
     "perses==0.5.1",
-    "openmmtools>=0.19.0",
-    "openforcefield>=0.6.0",
-    "openforcefields>=1.1.0"
+    "openmmtools==0.19.0",
+    "dask=2.12.0",
+    "dask-core==2.12.0",
+    "dask-jobqueue==0.7.0",
+    "distributed==2.12.0",
+    "networkx==2.4",
+    "openforcefield==0.6.0",
+    "openforcefields==1.1.0",
+    "openmm==7.5.0",
+    "openmmforcefields==0.7.1",
+    "openmmtools==0.19.0",
+    "openmoltools==0.8.6",
+    "rdkit==2019.09.3",
+    "tinydb==3.15.2",
+    "yank==0.25.2"
   ],
   "name": "perses-orion",
-  "python_version": "3.6",
+  "python_version": "3.7",
   "requirements": "orion-requirements.txt",
   "uuid": "903190e6-c35b-42cb-b793-1639ac8ad4c8",
-  "version": "0.1.9"
+  "version": "0.1.10"
 }
