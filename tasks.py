@@ -95,7 +95,7 @@ def test_cubes(ctx, opts="-s"):
     """
     run cube tests
     """
-    run("python -m pytest --tb=native -m 'not floetest' {}".format(opts), pty=pty)
+    run("python -m pytest -s --tb=native -m 'not floetest' {}".format(opts), pty=pty)
 
 
 @task
@@ -104,7 +104,7 @@ def test_floes(ctx, opts=""):
     run tests
     """
     # clean_pyc(ctx)
-    run("python -m pytest --tb=native -m 'floetest' {} ".format(opts), pty=pty)
+    run("python -m pytest -s --tb=native -m 'floetest' {} ".format(opts), pty=pty)
 
 
 @task

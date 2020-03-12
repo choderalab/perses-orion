@@ -229,36 +229,44 @@ class PersesCube(RecordPortsMixin, ComputeCube):
             self.failure.emit(record)
             oechem.OEWriteMolecule(ofs, mol)
 
-        # Prepare input for perses
-        # TODO: Use tempdir in future for filesystem reasons
-        self.log.info(f"Writing receptor...")
-        from openeye import oechem
-        protein_pdb_filename = 'receptor.pdb'
-        with oechem.oemolostream(protein_pdb_filename) as ofs:
-            oechem.OEWriteMolecule(ofs, self._receptor)
-        self.log.info(f"Writing ligands...")
-        ligands_sdf_filename = 'ligands.sdf'
-        with oechem.oemolostream(ligands_sdf_filename) as ofs:
-            oechem.OEWriteMolecule(ofs, self._reference_ligand) # molecule 0
-            oechem.OEWriteMolecule(ofs, mol) # molecule 1
-
         # Set up perses calculation
         from perses.app.setup_relative_calculation import getSetupOptions, run_setup, run
         self.log.info(f"Loading setup options...")
         setup_options = getSetupOptions(self.yaml_filename)
         self.log.info(str(setup_options))
 
-        self.log.info(f"Setting up perses calculation...")
-        perses_setup = run_setup(setup_options)
+        from tempfile import TemporaryDirectory
+        import os
+        cwd = os.getcwd()
+        with TemporaryDirectory() as tmpdir:
+            self.log.info(f"Entering temporary directory {tmpdir}")
+            #os.chdir(tmpdir)
 
-        self.log.info(f"Running calculations...")
-        run(self.yaml_filename)
+            # Prepare input for perses
+            # TODO: Use tempdir in future for filesystem reasons
+            self.log.info(f"Writing receptor...")
+            from openeye import oechem
+            protein_pdb_filename = 'receptor.pdb'
+            with oechem.oemolostream(protein_pdb_filename) as ofs:
+                oechem.OEWriteMolecule(ofs, self._receptor)
+            self.log.info(f"Writing ligands...")
+            ligands_sdf_filename = 'ligands.sdf'
+            with oechem.oemolostream(ligands_sdf_filename) as ofs:
+                oechem.OEWriteMolecule(ofs, self._reference_ligand) # molecule 0
+                oechem.OEWriteMolecule(ofs, mol) # molecule 1
 
-        # Analyze the data
-        self.log.info(f"Analyzing calculations...")
-        from perses.analyze.load_simulations import Simulation
-        simulation = Simulation(0, 1)
-        simulation.load_data()
+            self.log.info(f"Setting up perses calculation...")
+            perses_setup = run_setup(setup_options)
+
+            self.log.info(f"Running calculations...")
+            run(self.yaml_filename)
+
+            # Analyze the data
+            self.log.info(f"Analyzing calculations...")
+            from perses.analyze.load_simulations import Simulation
+            simulation = Simulation(0, 1)
+            simulation.load_data()
+            os.chdir(cwd)
 
         # Set output molecule information
         # TODO: Store trajectory or final snapshots
