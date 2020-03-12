@@ -240,7 +240,7 @@ class PersesCube(RecordPortsMixin, ComputeCube):
         cwd = os.getcwd()
         with TemporaryDirectory() as tmpdir:
             self.log.info(f"Entering temporary directory {tmpdir}")
-            #os.chdir(tmpdir)
+            os.chdir(tmpdir)
 
             # Prepare input for perses
             # TODO: Use tempdir in future for filesystem reasons
