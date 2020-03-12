@@ -20,7 +20,7 @@
     "perses==0.5.1"
   ],
   "name": "perses-orion",
-  "python_version": "3.6",
+  "python_version": "3.7",
   "requirements": "orion-requirements.txt",
   "uuid": "903190e6-c35b-42cb-b793-1639ac8ad4c8",
   "version": "0.1.4"
