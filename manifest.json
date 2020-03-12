@@ -6,6 +6,7 @@
     ]
   },
   "conda_channels": [
+    "anaconda",
     "conda-forge",
     "mobleylab",
     "omnia-dev/label/cuda90",
@@ -19,8 +20,8 @@
     "perses==0.5.1"
   ],
   "name": "perses-orion",
-  "python_version": "3.6",
+  "python_version": "3.7",
   "requirements": "orion-requirements.txt",
-  "uuid": "d84e8443-b92d-4082-a833-c8e27733a9d7",
-  "version": "0.1.0"
+  "uuid": "903190e6-c35b-42cb-b793-1639ac8ad4c8",
+  "version": "0.1.2"
 }
