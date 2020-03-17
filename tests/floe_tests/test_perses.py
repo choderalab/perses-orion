@@ -68,7 +68,8 @@ class TestPersesFloe(FloeTestCase):
         protein_file = DatasetWrapper.get_dataset(os.path.join(FILE_DIR, "Thrombin_protein.pdb"))
         reference_ligand_file = DatasetWrapper.get_dataset(os.path.join(FILE_DIR, "ligand7.sdf"))
         target_ligands_file = DatasetWrapper.get_dataset(os.path.join(FILE_DIR, "ligand0.sdf"))
-        output_file = OutputDatasetWrapper(extension=".oedb")
+        success_output_file = OutputDatasetWrapper(extension=".oedb")
+        failure_output_file = OutputDatasetWrapper(extension=".oedb")
         workfloe.start(
             {
                 "promoted": {
@@ -79,7 +80,8 @@ class TestPersesFloe(FloeTestCase):
                     "vacuum_test": True, # test ligand in vacuum only
                     "reference_ligand": reference_ligand_file.identifier,
                     "target_ligands": target_ligands_file.identifier,
-                    "out": output_file.identifier,
+                    "success": success_output_file.identifier,
+                    "failure": failure_output_file.identifier,
                 }
             }
         )
@@ -93,7 +95,7 @@ class TestPersesFloe(FloeTestCase):
         )
 
         ifs = oeifstream()
-        with open(output_file.path, "rb") as ifs:
+        with open(success_output_file.path, "rb") as ifs:
             records = list(OEReadRecords(ifs))
         count = len(records)
         self.assertEqual(count, 10)

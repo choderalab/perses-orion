@@ -34,14 +34,16 @@ protein_input_cube = DatasetReaderCube("protein_input_cube")
 reference_ligand_input_cube = DatasetReaderCube("reference_ligand_input_cube")
 target_ligands_input_cube = DatasetReaderCube("target_ligands_input_cube")
 perses_cube = PersesCube("perses_cube")
-output_cube = DatasetWriterCube("output_cube")
+success_output_cube = DatasetWriterCube("success_output_cube", title='success')
+failure_output_cube = DatasetWriterCube("failure_output_cube", title='failure')
 
 # Add cubes to floe
 job.add_cube(protein_input_cube)
 job.add_cube(reference_ligand_input_cube)
 job.add_cube(target_ligands_input_cube)
 job.add_cube(perses_cube)
-job.add_cube(output_cube)
+job.add_cube(success_output_cube)
+job.add_cube(failure_output_cube)
 
 # Promote parameters
 protein_input_cube.promote_parameter(
@@ -53,8 +55,12 @@ reference_ligand_input_cube.promote_parameter(
 target_ligands_input_cube.promote_parameter(
     "data_in", promoted_name="target_ligands", title="Target ligands"
 )
-output_cube.promote_parameter(
-    "data_out", promoted_name="out", title="Predicted relative binding free energies"
+success_output_cube.promote_parameter(
+    "data_out", promoted_name="success", title="Predicted relative binding free energies"
+)
+
+failure_output_cube.promote_parameter(
+    "data_out", promoted_name="failure", title="Failed relative binding free energy calculations"
 )
 
 perses_cube.promote_parameter(
@@ -72,7 +78,8 @@ perses_cube.promote_parameter(
 protein_input_cube.success.connect(perses_cube.protein_port)
 reference_ligand_input_cube.success.connect(perses_cube.reference_ligand_port)
 target_ligands_input_cube.success.connect(perses_cube.target_ligands_port)
-perses_cube.success.connect(output_cube.intake)
+perses_cube.success.connect(success_output_cube.intake)
+perses_cube.failure.connect(failure_output_cube.intake)
 
 if __name__ == "__main__":
     job.run()
