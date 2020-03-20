@@ -1,12 +1,11 @@
 name: orion
 channels:
+- anaconda
 - conda-forge
-- mobleylab
 - omnia-dev/label/cuda90 # openmm 7.5.0 required for SMIRNOFF support
 - omnia
 - OpenEye/label/Orion
-- SolvationTools
-- nividic
+- OpenEye
 dependencies:
 # general
 - pip
