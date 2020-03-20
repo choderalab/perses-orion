@@ -72,6 +72,13 @@ perses_cube.promote_parameter(
 )
 
 perses_cube.promote_parameter(
+    "protein_forcefield", promoted_name="protein_forcefield", title='Force field parameters to be applied to the protein'
+)
+
+perses_cube.promote_parameter(
+    "ligand_forcefield", promoted_name="ligand_forcefield", title='Force field to be applied to the ligand'
+)
+perses_cube.promote_parameter(
     "vacuum_test", promoted_name="vacuum_test", title="If True, just run a quick test in vacuum"
 )
 

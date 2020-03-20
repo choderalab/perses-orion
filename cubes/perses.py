@@ -166,6 +166,10 @@ class PersesCube(RecordPortsMixin, ComputeCube):
     dDDG_field = OEField("dDDG_field", Types.Float)
 
     def begin(self):
+        # Log OpenMM version
+        from simtk import openmm
+        self.log.info(f'OpenMM version: {openmm.version.version}')
+
         # Retrieve receptor
         mols = [record.get_value(OEPrimaryMolField()) for record in self.protein_port]
         if len(mols) != 1:

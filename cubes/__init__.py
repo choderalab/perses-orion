@@ -1,3 +1,3 @@
-__version__ = "0.1.14"
+__version__ = "0.1.17"
 
 from .perses import PersesCube
