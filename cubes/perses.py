@@ -47,18 +47,19 @@ class PersesCube(RecordPortsMixin, ComputeCube):
     parameter_overrides = {
         "gpu_count": {"default": 1},
         "memory_mb": {"default": 6000},
-        "instance_tags": {"default": "cuda9"}, # Can we upgrade this?
         "spot_policy": {"default": "Prohibited"}, # TODO: Figure out how to allow spot policy
-        #"spot_policy": {"default": "Allowed"}, # TODO:
+        #"spot_policy": {"default": "Allowed"}, # TODO: Write code to resume automatically
         "prefetch_count": {"default": 1},  # 1 molecule at a time
         "item_count": {"default": 1}  # 1 molecule at a time
     }
 
+    # TODO: Automatically update these
     AVAILABLE_PROTEIN_FORCEFIELDS = [
         'amber/protein.ff14SB.xml',
         'amber/ff99SBildn.xml',
         ]
 
+    # TODO: Automatically update these
     AVAILABLE_LIGAND_FORCEFIELDS = [
         'openff-1.0.0',
         'smirnoff99Frosst-1.1.0',

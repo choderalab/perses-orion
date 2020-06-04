@@ -1,27 +1,21 @@
-name: orion
+name: orion-perses
 channels:
-- anaconda
 - conda-forge
-- omnia-dev/label/cuda90 # openmm 7.5.0 required for SMIRNOFF support
+- omnia/label/cuda100
 - omnia
 - OpenEye/label/Orion
-- OpenEye
 dependencies:
 # general
-- pip
-- cookiecutter
+- pip==18.0
 # perses
-- perses
-# orion
+- perses==0.5.1
 - pip:
-  - OpenEye-orionplatform==2.2.0
-  - attrs==18.2.0
-  - invoke==1.2.0
-  - OpenEye-artemis==1.1.1
-  - OpenEye-ensemble2img==0.1.1
-  - OpenEye-floereport==0.1.5
-  - OpenEye_oetrajanalysis==0.1.4.4
+# Leave this here to avoid pip install issues
+  - OpenEye-orionplatform==2.4.4
+  - OpenEye-artemis
+  - attrs
+  - invoke
   - Openeye-toolkits==2019.10.2
-  - pytest==3.10.1
+  - psutil==5.6.7
   - six==1.12.0
   - wcwidth==0.1.7
