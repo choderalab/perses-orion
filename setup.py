@@ -25,7 +25,7 @@ from pip._internal.req import parse_requirements
 from pip._internal.download import PipSession
 def get_reqs(reqs):
   return [str(ir.req) for ir in reqs]
-install_reqs = get_reqs(parse_requirements("requirements_dev.txt", session=PipSession()))
+requirements = get_reqs(parse_requirements("orion-requirements.txt", session=PipSession()))
 
 if argv[-1] == "--requires":
     print(dumps(requirements))
